@@ -21,7 +21,8 @@ custom-panic = []
 
 
 [dependencies]
-anchor-lang = "0.30.1"
+# anchor-lang = "0.30.1"
+anchor-lang = "0.32.1"
 # session-keys = { git = "https://github.com/magicblock-labs/session-keys",  features = ["no-entrypoint"] }
 # session-keys = { version = "2.0.6", features = ["no-entrypoint"] }
 session-keys = { path = "/home/pankaj/turbine/session-keys/programs/gpl_session", features = ["no-entrypoint"] }

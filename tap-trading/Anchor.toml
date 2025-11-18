@@ -6,7 +6,7 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-tap_trading = "JDGBAerahzw4CEkj9CykBEvFKUFQ9butpLzVoXgtBoPE"
+tap_trading = "2w4oVPm7JEd2qnWt1mJ4YLpXAW6Wrp9Rk2EfKFVJNanB"
 
 [registry]
 url = "https://api.apr.dev"

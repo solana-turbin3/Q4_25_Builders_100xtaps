@@ -518,6 +518,9 @@ export const GameCanvas: React.FC = () => {
     }
 
     setBalance((prev) => prev - BET_AMOUNT);
+
+    
+
     addBet({
       id: gridId,
       startPrice,

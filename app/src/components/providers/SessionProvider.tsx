@@ -5,7 +5,7 @@ import {
   SessionWalletProvider,
   useSessionKeyManager,
 } from '@magicblock-labs/gum-react-sdk';
-import { useAnchorWallet, useConnection } from '@solana/wallet-adapter-react';
+import { AnchorWallet, useAnchorWallet, useConnection } from '@solana/wallet-adapter-react';
 import { SOLANA_NETWORK } from '@/lib/constants';
 
 interface SessionProviderProps {
@@ -16,7 +16,7 @@ export const SessionProvider: React.FC<SessionProviderProps> = ({
   children,
 }) => {
   const { connection } = useConnection();
-  const anchorWallet = useAnchorWallet();
+  const anchorWallet = useAnchorWallet() as AnchorWallet
 
   const sessionWallet = useSessionKeyManager(
     anchorWallet,

@@ -1,10 +1,9 @@
-use anchor_lang::prelude::*;
-use session_keys::{SessionError, SessionToken, session_auth_or, Session};
-use crate::state::*;
 use crate::errors::*;
+use crate::state::*;
+use anchor_lang::prelude::*;
+use session_keys::{session_auth_or, Session, SessionError, SessionToken};
 
-#[derive(Accounts)]
-#[derive(Session)]
+#[derive(Accounts, Session)]
 #[instruction(timestamp: i64)]
 pub struct CreateBet<'info> {
     #[account(
@@ -19,30 +18,32 @@ pub struct CreateBet<'info> {
         bump
     )]
     pub bet: Account<'info, Bet>,
-    
+
     #[account(
         mut,
         seeds = [ProxyAccount::SEED_PREFIX, proxy_account.owner.as_ref()],
         bump = proxy_account.bump
     )]
     pub proxy_account: Account<'info, ProxyAccount>,
-    
+
     #[account(
         seeds = [Market::SEED_PREFIX],
         bump = market.bump,
         constraint = market.is_active @ BettingError::MarketNotActive
     )]
     pub market: Account<'info, Market>,
-    
+
     #[session(
         signer = signer,
         authority = proxy_account.owner.key()
     )]
     pub session_token: Option<Account<'info, SessionToken>>,
-    
+
     #[account(mut)]
-    pub signer: Signer<'info>,
-    
+    pub signer: Signer<'info>, //session wallet for authorization
+
+    // #[account(mut)]
+    // pub owner: Signer<'info>, // main wallet for payment
     pub system_program: Program<'info, System>,
 }
 
@@ -58,25 +59,30 @@ pub fn handler(
     amount: u64,
 ) -> Result<()> {
     let clock = Clock::get()?;
-    
+
     require!(amount > 0, BettingError::InvalidBetAmount);
     require!(odds > 0, BettingError::InvalidOdds);
-    require!(expiry_time > clock.unix_timestamp, BettingError::InvalidTimestamp);
-    
+    require!(
+        expiry_time > clock.unix_timestamp,
+        BettingError::InvalidTimestamp
+    );
+
     let proxy_account = &mut ctx.accounts.proxy_account;
     require!(
         proxy_account.balance >= amount,
         BettingError::InsufficientBalance
     );
-    
+
     // Deduct amount from proxy account balance
-    proxy_account.balance = proxy_account.balance
+    proxy_account.balance = proxy_account
+        .balance
         .checked_sub(amount)
         .ok_or(BettingError::ArithmeticOverflow)?;
-    proxy_account.total_bets = proxy_account.total_bets
+    proxy_account.total_bets = proxy_account
+        .total_bets
         .checked_add(1)
         .ok_or(BettingError::ArithmeticOverflow)?;
-    
+
     let bet = &mut ctx.accounts.bet;
     bet.user = proxy_account.owner;
     bet.market = ctx.accounts.market.key();
@@ -87,7 +93,7 @@ pub fn handler(
     bet.amount = amount;
     bet.is_active = true;
     bet.bump = ctx.bumps.bet;
-    
+
     msg!(
         "Bet created: user={}, amount={}, odds={}, expiry={}",
         bet.user,
@@ -95,6 +101,6 @@ pub fn handler(
         odds,
         expiry_time
     );
-    
+
     Ok(())
 }

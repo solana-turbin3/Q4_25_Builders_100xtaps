@@ -4,7 +4,7 @@ import React from 'react';
 import { Navigation } from '@/components/ui/Navigation';
 
 export default function LeaderboardPage() {
-  // Mock data - replace with real data later
+  // Mock data 
   const leaderboard = [
     { rank: 1, address: '7xKX...9mPq', profit: '+$5,420', wins: 42, losses: 18 },
     { rank: 2, address: '3pQr...4nBx', profit: '+$3,890', wins: 35, losses: 22 },

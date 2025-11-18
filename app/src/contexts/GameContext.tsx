@@ -1,8 +1,11 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useCallback , useEffect} from 'react';
 import { GameState, Bet, Collision } from '@/lib/types';
 import { INITIAL_BALANCE, INITIAL_PRICE } from '@/lib/constants';
+import { useBetting } from '@/hooks/useBetting';
+import { LAMPORTS_PER_SOL } from '@solana/web3.js';
+
 
 interface GameContextType extends GameState {
   setBalance: (balance: number | ((prev: number) => number)) => void;
@@ -30,6 +33,19 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({
   const [collisions, setCollisions] = useState<Collision[]>([]);
   const [vanishingBets, setVanishingBets] = useState<Bet[]>([]);
 
+  const { createBetOnChain, proxyAccount } = useBetting();
+
+
+  useEffect(() => {
+    if (proxyAccount) {
+      const solBalance = proxyAccount.balance / LAMPORTS_PER_SOL;
+      // Convert SOL to game dollars (you can adjust this rate)
+      const gameBalance = solBalance * 100; // 1 SOL = $100 in game
+      setBalance(gameBalance);
+    }
+  }, [proxyAccount]);
+
+
   const addPricePoint = useCallback((time: number, price: number) => {
     setPriceHistory((prev) => {
       const newHistory = [...prev, { time, price }];
@@ -37,9 +53,30 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({
     });
   }, []);
 
-  const addBet = useCallback((bet: Bet) => {
-    setActiveBets((prev) => [...prev, bet]);
-  }, []);
+
+    const addBet = useCallback(
+    (bet: Bet) => {
+      setActiveBets((prev) => [...prev, bet]);
+
+      console.log('Adding bet:', bet);
+
+
+
+      // Fire and forget - don't wait for blockchain confirmation
+      createBetOnChain(bet).then((success) => {
+        if (success) {
+          console.log('Bet successfully created on-chain');
+        } else {
+          console.log('Failed to create bet on-chain, but continuing locally');
+        }
+      }).catch((error) => {
+        console.error('Error in createBetOnChain:', error);
+      });
+    },
+    [createBetOnChain]
+  );
+
+  
 
   const updateBets = useCallback((updater: (bets: Bet[]) => Bet[]) => {
     setActiveBets(updater);
